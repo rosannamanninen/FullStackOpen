@@ -1,0 +1,3 @@
+Selain->Palvelin: new_note_spa POST(date ja content)
+Palvelin->Selain: new_note_spa
+note over Selain: Sivu päivittyy js-koodin ohjeiden mukaisesti
