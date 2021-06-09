@@ -1,0 +1,11 @@
+Selain->Palvelin: favicon.io pyyntö GET
+Palvelin->Selain: favicon.io
+Selain->Palvelin: data.json pyyntö GET
+Palvelin->Selain: data.json
+Selain->Palvelin: main.js pyyntö GET
+Palvelin->Selain: main.js
+Selain->Palvelin: main.css pyyntö GET
+Palvelin->Selain: main.css
+note over Selain: Sivun suoritus
+Selain->Palvelin: Spa GET
+Palvelin->Selain: Spa
