@@ -1,72 +1,36 @@
-import { useState } from 'react'
-
-const PuhelinForm = (props) => {
-
-  return (
-    <form>
-        <div>
-          name: <input value={props.newName} onChange={props.handleNameChange}/>
-        </div>
-        <div>
-          num: <input value={props.newNum} onChange={props.handleNumChange}/>
-        </div>
-        <div>
-          <button type="submit" onClick={props.addPerson}>add</button>
-        </div>
-      </form>
-
-  )
-}
-
-const Luettelo = (props) => {
-
-  return (
-    <>
-      {props.persons.map(
-        person => 
-        person.name.toLowerCase().includes(props.newFilter) ? <p key={person.name}>
-          {person.name + ' ' + person.num}
-        </p> : null
-        )}
-    </>
-  )
-}
-
-const Filtteri = (props) => {
-
-  return (
-    <form>
-        <div>
-          name: <input value={props.newFilter} onChange={props.handleFilterChange}/>
-        </div>
-      </form>
-  )
-}
+import { useState, useEffect } from 'react'
+import PuhelinForm from './components/PuhelinForm'
+import Luettelo from './components/Luettelo'
+import Filtteri from './components/Filtteri'
+import personService from './services/persons'
 
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', num: '040-123456' },
-    { name: 'Ada Lovelace', num: '39-44-5323523' },
-    { name: 'Dan Abramov', num: '12-43-234345' },
-    { name: 'Mary Poppendieck', num: '39-23-6423122' }
-  ]) 
+  const [persons, setPersons] = useState([]) 
   const [newName, setNewName] = useState('')
-  const [newNum, setNewNum] = useState('')
+  const [newNumber, setNewNumber] = useState('')
   const [newFilter, setNewFilter] = useState('')
+
+
+  useEffect(() => {
+    personService
+      .getAll()
+      .then(persons => {
+        setPersons(persons)
+      })
+  }, [])
 
   const handleNameChange = (event) => {
     console.log(event.target.value)
     setNewName(event.target.value)
   }
 
-  const handleNumChange = (event) => {
+  const handleNumberChange = (event) => {
     console.log(event.target.value)
-    setNewNum(event.target.value)
+    setNewNumber(event.target.value)
   }
 
   const handleFilterChange = (event) => {
-    console.log(event.target.value)
     setNewFilter(event.target.value)
   }
 
@@ -74,16 +38,32 @@ const App = () => {
     event.preventDefault()
     const personObject = {
       name: newName,
-      num: newNum ,
+      number: newNumber ,
     }
     if (persons.find(element => element.name === newName)) {
       window.alert(newName + ' on jo puheliluettelossa.')
     }
     else {
-      setPersons(persons.concat(personObject))
+      personService
+      .create(personObject)
+      .then(returnedPerson => {
+        setPersons(persons.concat(returnedPerson))
+      })
     }
     setNewName('')
-    setNewNum('')
+    setNewNumber('')
+  }
+
+  const delPerson = (event) => {
+    event.preventDefault()
+    const butPerson = event.target.value
+    console.log('tääl deletes')
+    if (window.confirm('delete' + butPerson.name))
+    personService.deletePerson(butPerson.id)
+    .then(returnedPerson => setPersons(persons.filter(person => person.id !== butPerson.id)))
+    console.log(persons)
+
+
   }
 
   return (
@@ -97,14 +77,15 @@ const App = () => {
         <PuhelinForm 
           newName = {newName}
           handleNameChange = {handleNameChange}
-          newNum = {newNum}
-          handleNumChange = {handleNumChange}
+          newNumber = {newNumber}
+          handleNumberChange = {handleNumberChange}
           addPerson = {addPerson}
           />
         <h2>Numbers</h2>
         <Luettelo 
           persons= {persons}
-          newFilter = {newFilter}/>
+          newFilter = {newFilter}
+          delPerson = {delPerson}/>
     </div>
   )
 
