@@ -3,6 +3,9 @@ import PuhelinForm from './components/PuhelinForm'
 import Luettelo from './components/Luettelo'
 import Filtteri from './components/Filtteri'
 import personService from './services/persons'
+import Notification from './components/Notification'
+import './index.css';
+
 
 
 const App = () => {
@@ -10,6 +13,9 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [newFilter, setNewFilter] = useState('')
+  const [errorMessage, setErrorMessage] = useState(null)
+  const [errorBadMessage, setBadErrorMessage] = useState(null)
+
 
 
   useEffect(() => {
@@ -21,12 +27,10 @@ const App = () => {
   }, [])
 
   const handleNameChange = (event) => {
-    console.log(event.target.value)
     setNewName(event.target.value)
   }
 
   const handleNumberChange = (event) => {
-    console.log(event.target.value)
     setNewNumber(event.target.value)
   }
 
@@ -40,35 +44,78 @@ const App = () => {
       name: newName,
       number: newNumber ,
     }
-    if (persons.find(element => element.name === newName)) {
-      window.alert(newName + ' on jo puheliluettelossa.')
+    const personExists =  persons.find(element => element.name === newName)
+    if (personExists) {
+      window.confirm(newName + 'on jo puhelinluettelossa. Päivitetäänkö numero?')
+      personService
+      .updatePerson(personExists.id ,personObject)
+      .then(returnedPerson => {
+        setPersons(persons.map(person => person.name !== personObject.name ? person : personObject))
+        setErrorMessage('Numero päivitetty onnistuneesti.')
+        setTimeout(() => {
+        setErrorMessage(null)
+        }, 5000)
+      })
+      .catch(error => {
+        setBadErrorMessage('Numeron päivitys epäonnistui.')
+        setTimeout(() => {
+          setBadErrorMessage(null)
+        }, 5000)
+      }
+        )
     }
     else {
       personService
       .create(personObject)
       .then(returnedPerson => {
         setPersons(persons.concat(returnedPerson))
+      setErrorMessage(personObject.name + ' lisätty.')
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
       })
+      .catch(error => {
+        setBadErrorMessage('Numeron lisäys epäonnistui.')
+        setTimeout(() => {
+          setBadErrorMessage(null)
+        }, 5000)
+      }
+        )
     }
     setNewName('')
     setNewNumber('')
   }
 
-  const delPerson = (event) => {
-    event.preventDefault()
-    const butPerson = event.target.value
-    console.log('tääl deletes')
-    if (window.confirm('delete' + butPerson.name))
-    personService.deletePerson(butPerson.id)
-    .then(returnedPerson => setPersons(persons.filter(person => person.id !== butPerson.id)))
-    console.log(persons)
+  const delPerson = (id, name) => {
 
-
+    if (window.confirm('Delete ' + name + '?')){
+    personService
+    .deletePerson(id)
+    .then(returnedPerson => {
+      setPersons(persons.filter(person => person.id !== id))
+      if (returnedPerson !== undefined) {
+        setErrorMessage(name + ' poistettu.')
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)
+      } }
+      )
+      .catch(error => {
+        setBadErrorMessage('Henkilöä ' + name + ' ei voitu poistaa, sillä hänet oli jo poistettu.')
+        setTimeout(() => {
+          setBadErrorMessage(null)
+        }, 5000)
+      }
+        )
+        
+      }
   }
 
   return (
     <div>
         <h2>Phonebook</h2>
+        <Notification type="goodMessage" message={errorMessage} />
+        <Notification type="badMessage" message={errorBadMessage} />
         <Filtteri 
           newFilter= {newFilter}
           handleFilterChange = {handleFilterChange}
